@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "chat-ddd-fastapi"
+version = "0.1.0"
+description = ""
+authors = ["ego rep <kloler.egor@mail.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.111.1"
+motor = "^3.5.1"
+uvicorn = {extras = ["all"], version = "^0.30.3"}
+ipython = "^8.26.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
