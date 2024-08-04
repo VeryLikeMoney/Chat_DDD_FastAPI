@@ -19,10 +19,10 @@ class Mediator:
     )
     
     def registrer_event(self, event: ET, event_handlers: Iterable[EventHandler[ET, ER]]):
-        self.events_map(event).append(event_handlers)
+        self.events_map[event].append(event_handlers)
         
     def registrer_command(self, command: CT, command_handlers: Iterable[EventHandler[CT, CR]]):
-        self.events_map(command).extend(command_handlers)
+        self.events_map[command].extend(command_handlers)
     
     async def handle_event(self, event: BaseEvent) -> Iterable[ER]:
         event_type = event.__class__ 
@@ -40,7 +40,7 @@ class Mediator:
         if not handlers:
             raise CommandHandlersNotRegisteredException(command_type)
         
-        return [await handler.handle(command) for handler in handlers ]
+        return [ await handler.handle(command) for handler in handlers ]
             
     
     

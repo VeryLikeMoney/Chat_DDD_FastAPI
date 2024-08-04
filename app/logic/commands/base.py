@@ -6,11 +6,11 @@ from typing import Any, TypeVar, Generic
 class BaseCommand(ABC):
     ...
 
-CT = TypeVar(name='CT',bound=BaseCommand)
-CR = TypeVar(name='CR', bound=Any)
+CT = TypeVar('CT',bound=BaseCommand)
+CR = TypeVar('CR', bound=Any)
 
 @dataclass(frozen=True)
-class CommandHandler(ABC, Generic[CT]):
+class CommandHandler(ABC, Generic[CT, CR]):
     @abstractmethod
     async def handle(self, command: CT) -> CR:
         ...
