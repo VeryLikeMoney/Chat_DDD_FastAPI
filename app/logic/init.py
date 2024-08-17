@@ -1,13 +1,29 @@
+from functools import lru_cache
+from punq import Container, Scope
 from infra.repositories.messages import BaseChatRepository, MemoryChatRepository
 from logic.commands.messages import CreateChatCommand, CreateChatCommandHandler
 from logic.mediator import Mediator
 
 
-def init_mediator(
-    mediator: Mediator,
-    chat_repository: BaseChatRepository
-):
-    mediator.registrer_command(
-        CreateChatCommand,
-        [CreateChatCommandHandler(chat_repository=chat_repository)],
-    )
+
+
+@lru_cache(1)
+def init_container():
+    return _init_container()
+
+def _init_container() -> Container:
+    container = Container()
+    container.register(BaseChatRepository, MemoryChatRepository, scope=Scope.singleton)
+    container.register(CreateChatCommandHandler)
+    
+    def init_mediator():
+        mediator = Mediator()
+        mediator.registrer_command(
+            CreateChatCommand,
+            [container.resolve(CreateChatCommandHandler)],
+        )
+        return mediator
+    
+    container.register(Mediator, factory=init_mediator)
+    
+    return container
