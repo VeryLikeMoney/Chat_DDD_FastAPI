@@ -5,8 +5,6 @@ from logic.commands.messages import CreateChatCommand, CreateChatCommandHandler
 from logic.mediator import Mediator
 
 
-
-
 @lru_cache(1)
 def init_container():
     return _init_container()
