@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from typing import Iterable
 from motor.core import AgnosticClient
 from domain.entities.messages import Chat, Message
+from infra.repositories.filters.messages import GetMessagesFilters
 from infra.repositories.messages.base import BaseChatsRepository, BaseMessagesRepository
-from infra.repositories.messages.converters import convert_chat_document_to_entity, convert_entity_to_document, convert_message_to_document
+from infra.repositories.messages.converters import convert_chat_document_to_entity, convert_chat_entity_to_document, convert_message_entity_to_document, covert_message_document_to_entity
 
 @dataclass
 class BaseMongoDBReposity:
@@ -29,20 +31,24 @@ class MongoDBChatsRepository(BaseMongoDBReposity, BaseChatsRepository):
     
     async def add_chat(self, chat: Chat) -> None:
         await self._collection.insert_one(
-            convert_entity_to_document(chat),
+            convert_chat_entity_to_document(chat),
         )
 
 @dataclass
 class MongoDBMessagesRepository(BaseMessagesRepository, BaseMongoDBReposity):   
-    async def add_message(self, chat_oid: str, message: Message) -> None:
+    async def add_message(self, message: Message) -> None:
         await self._collection.insert_one(
-            document=convert_message_to_document(message)
+            document=convert_message_entity_to_document(message)
         )
-        await self._collection.update_one(
-            filter={'oid':chat_oid},
-            update={
-                '$push': {
-                    'messages': convert_message_to_document(message),
-                },
-            },
-        )
+
+    async def get_messages(self, chat_oid: str, filters: GetMessagesFilters) -> tuple[Iterable[Message], int]:
+        find = {'chat_oid': chat_oid}
+        cursor = self._collection.find(filter=find).skip(filters.offset).limit(filters.limit)
+        
+        messages = [
+            covert_message_document_to_entity(message_document=message_document)
+            async for message_document in cursor.skip(filters.offset).limit(filters.limit)
+        ]
+        count = await self._collection.count_documents(filter=find)
+        
+        return messages, count
