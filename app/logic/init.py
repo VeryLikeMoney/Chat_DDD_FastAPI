@@ -5,6 +5,7 @@ from infra.repositories.messages.mongo import MongoDBChatsRepository, MongoDBMes
 from logic.commands.messages import CreateChatCommand, CreateChatCommandHandler, CreateMessageCommand, CreateMessageCommandHandler
 from logic.mediator import Mediator
 from motor.motor_asyncio import AsyncIOMotorClient
+from logic.queries.messages import GetChatDetailQuery, GetChatDetailQueryHandler
 from settings.config import Config
 
 
@@ -34,25 +35,31 @@ def _init_container() -> Container:
         return MongoDBMessagesRepository(
             mongo_db_client=client,
             mongo_db_db_name=config.mongodb_chat_database,
-            mongo_db_collection_name=config.mongodb_chat_collection,
+            mongo_db_collection_name=config.mongodb_messages_collection,
         )
     
     container.register(BaseChatsRepository, factory=init_chats_mongodb_repository, scope=Scope.singleton)
     container.register(BaseMessagesRepository, factory=init_messages_mongodb_repository, scope=Scope.singleton)
+    
     container.register(CreateChatCommandHandler)
     container.register(CreateMessageCommandHandler)
-    
+    container.register(GetChatDetailQueryHandler)
     #Mediator
     def init_mediator() -> Mediator:
         mediator = Mediator()
-        mediator.registrer_command(
+        mediator.register_command(
             CreateChatCommand,
             [container.resolve(CreateChatCommandHandler)],
         )
-        mediator.registrer_command(
+        mediator.register_command(
             CreateMessageCommand,
             [container.resolve(CreateMessageCommandHandler)],
         )
+        mediator.register_query(
+            GetChatDetailQuery,
+            container.resolve(GetChatDetailQueryHandler), 
+        )
+        
         return mediator
     
     container.register(Mediator, factory=init_mediator) 
